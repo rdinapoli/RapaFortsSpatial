@@ -93,13 +93,12 @@ ppm_AICc <- model.sel(ppm0, ppm1, ppm2, ppm3, ppm4, ppm5, rank=AICc)
 ppm_AICc# Results
  
 #print results of best fitting model
-ppm3
+summary(ppm3)
 
 # Residual K-functions 
 set.seed(1234)
 K_sim <- envelope(ppm3, Kres, nsim=39, fix.n=T, correction="best") #why best here?
 plot(K_sim, lwd=3, legend='F')
-
 
 # Modeling with Gibbs  Hard-core process: forbidden to come close to oneanother within a specified distance   
 #Inhomogeneous models include models that involve covariate effects (like elevation)  - 
@@ -127,3 +126,23 @@ ppm7
 set.seed(1234)
 K_sim2 <- envelope(ppm7, Kres, nsim=39, fix.n=T, correction="best") #why best here?
 plot(K_sim2, lwd=3, legend='F')
+
+#######################
+#######################
+#### Print Figures ####
+#######################
+#######################
+
+#L function plot
+jpeg(file=here('Figures','temporary','L_function.jpeg'),width = 6, height = 6,units='in',res=300)
+plot(pare_L, lwd=3, main='L-Function')
+dev.off()
+
+#residual k function plots
+jpeg(file=here('Figures','temporary','Residual K-Functions.jpeg'),width = 10, height = 5,units='in',res=300)
+par(mfrow=c(1,2))
+plot(K_sim, lwd=3, main='Model 3')
+plot(K_sim2, lwd=3, main='Model 7', legend=F)
+par(mfrow=c(1,1))
+dev.off()
+
