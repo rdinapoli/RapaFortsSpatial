@@ -14,13 +14,20 @@ shore_line <- readOGR(here('Data', "shore limit.shp"))
 DTM <- raster(here('Data', "tingrid_Copy.tif"))
 ag_vis <- raster(here('Data',"5m_ag34_vis_Copy.tif"))
 tot_vis <- raster(here('Data', "5m_tot_vis2_Copy.tif"))
-#
+
+#Make slope variable
+slope <- terrain(DTM, opt='slope', unit='radians', neighbors=8)
+#aggregate slope because pare are on flattened areas, want average slope of neighborhood
+slope <- aggregate(slope, fact=5)
+plot(slope)
+
 #convert to spatstat formating 
 shore <- as.owin(shore_line) #convert to window format
 pare <- ppp(pare_points$POINT_X, pare_points$POINT_Y, window=shore) #convert pare to a ppp object/ error? maybe use X_Cor
 elev <- as.im(DTM) #convert DTM to a pixel image
 ag_vis <- as.im(ag_vis) #convert g visibility to a pixel image
 tot_vis <- as.im(tot_vis) #convert total visibility to a pixel image
+slope <- as.im(slope)
 
 ###################
 ## Basic Maps #####
@@ -59,6 +66,9 @@ plot(pare_L, lwd=3)
 elev_rh <- rhohat(pare, elev) #intensity as a function of elevation w/ 95% confidence bands
 ag_vis_rh <- rhohat(pare, ag_vis) #intensity as a function of visibility from agricultural plots with 95% confidence bands
 tot_vis_rh <- rhohat(pare, tot_vis) #intensity as a function of total visibility for the island w/ 95% confidence bands
+slope_rh <- rhohat(pare, slope)
+
+plot(slope_rh)
 #
 # Create series of descriptive graphs for a figure
 par(mfrow=c(3,2))
@@ -86,10 +96,13 @@ ppm2 <- ppm(pare, ~ag_vis, correction = 'none')
 ppm3 <- ppm(pare, ~tot_vis, correction = 'none')
 ppm4 <- ppm(pare, ~elev+ag_vis, correction = 'none')
 ppm5 <- ppm(pare, ~elev+tot_vis, correction = 'none')
-
+ppmS <- ppm(pare, ~slope, correction= 'none') #added models with slope
+ppmSE <- ppm(pare, ~slope+elev, correction= 'none')
+ppmSV <- ppm(pare, ~slope+tot_vis, correction= 'none')
+ppmSEV <- ppm(pare, ~slope+elev+tot_vis, correction= 'none')
 
 # AICc model comparison
-ppm_AICc <- model.sel(ppm0, ppm1, ppm2, ppm3, ppm4, ppm5, rank=AICc)
+ppm_AICc <- model.sel(ppm0, ppm1, ppm2, ppm3, ppm4, ppm5, ppmS, ppmSE, ppmSV, ppmSEV, rank=AICc)
 ppm_AICc# Results
  
 #print results of best fitting model
@@ -97,8 +110,14 @@ summary(ppm3)
 
 # Residual K-functions 
 set.seed(1234)
-K_sim <- envelope(ppm3, Kres, nsim=39, fix.n=T, correction="best") #why best here?
+K_sim <- envelope(ppm3, Kres, nsim=39, fix.n=T)
 plot(K_sim, lwd=3, legend='F')
+
+#plot predicted first-order intensity of best-fitting model
+plot(intensity.ppm(ppm3), 
+     col=gray.colors(10, start = 0.3, end = 0.9, gamma = 2.2, rev = T),
+     main="", riblab="Fitted intensity")
+
 
 # Modeling with Gibbs  Hard-core process: forbidden to come close to oneanother within a specified distance   
 #Inhomogeneous models include models that involve covariate effects (like elevation)  - 
@@ -108,15 +127,18 @@ plot(K_sim, lwd=3, legend='F')
 #Stick with Strauss, hybrid is better for multiple interactions, but this is really just one interaction between forts. 
 
 #Strauss. range of pairwise interaction determined by looking at Kr throguh mean(K_sim$r) = 942  and the mean of nearest neighbor = 971 
-ppm6 <- ppm(pare, ~ 1, Strauss(900))
-ppm7 <- ppm(pare, ~ tot_vis, Strauss(900))
-ppm8 <- ppm(pare, ~ elev, Strauss(900))
-ppm9 <- ppm(pare, ~ elev + tot_vis, Strauss(900))
-ppm10 <- ppm(pare, ~ ag_vis, Strauss(900))
-ppm11 <- ppm(pare, ~ elev + ag_vis, Strauss(900))
-
-#New ranking for ppm6, 8 and 9 
-ppm_AICc2 <- model.sel(ppm3, ppm6, ppm7, ppm8, ppm9, ppm10, ppm11, rank=AICc)
+ppm6 <- ppm(pare, ~ 1, Strauss(950), correction = 'none')
+ppm7 <- ppm(pare, ~ tot_vis, Strauss(950), correction = 'none')
+ppm8 <- ppm(pare, ~ elev, Strauss(950), correction = 'none')
+ppm9 <- ppm(pare, ~ elev + tot_vis, Strauss(950), correction = 'none')
+ppm10 <- ppm(pare, ~ ag_vis, Strauss(950), correction = 'none')
+ppm11 <- ppm(pare, ~ elev + ag_vis, Strauss(950), correction = 'none')
+ppmS2 <- ppm(pare, ~slope, Strauss(950), correction= 'none') #added models with slope
+ppmSE2 <- ppm(pare, ~slope+elev, Strauss(950), correction= 'none')
+ppmSV2 <- ppm(pare, ~slope+tot_vis, Strauss(950), correction= 'none')
+ppmSEV2 <- ppm(pare, ~slope+elev+tot_vis, Strauss(950), correction= 'none')
+#compare Gibbs models, ppm3 clearly inadequate, so dont include it
+ppm_AICc2 <- model.sel(ppm6, ppm7, ppm8, ppm9, ppm10, ppm11, ppmS2, ppmSE2, ppmSV2, ppmSEV2,rank=AICc)
 ppm_AICc2
 
 #print results of best fitting model
@@ -124,9 +146,14 @@ ppm7
 
 #check residual K
 set.seed(1234)
-K_sim2 <- envelope(ppm7, Kres, nsim=39, fix.n=T, correction="best") #why best here?
+K_sim2 <- envelope(ppm7, Kres, nsim=39, fix.n=T)
 plot(K_sim2, lwd=3, legend='F')
 
+#plot predicted first-order intensity of best-fitting model
+plot(intensity.ppm(ppm7), 
+     col=gray.colors(10, start = 0.3, end = 0.9, gamma = 2.2, rev = T),
+     main="", riblab="Fitted intensity")
+plot(pare, pch=16, col='red', cex=0.25, add=T)
 #######################
 #######################
 #### Print Figures ####
@@ -146,3 +173,10 @@ plot(K_sim2, lwd=3, main='Model 7', legend=F)
 par(mfrow=c(1,1))
 dev.off()
 
+#plot predicted first-order intensity of best-fitting model
+jpeg(file=here('Figures','temporary','Fitted_intensity_model7.jpeg'),width = 6, height = 6,units='in',res=300)
+plot(intensity.ppm(ppm7), 
+     col=gray.colors(10, start = 0.3, end = 0.9, gamma = 2.2, rev = T),
+     main="", riblab="Fitted intensity")
+plot(pare, pch=16, col='red', cex=0.5, add=T)
+dev.off()
