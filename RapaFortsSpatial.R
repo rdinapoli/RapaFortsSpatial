@@ -47,10 +47,10 @@ plot(pare_L)
 
 #Examine form of possible covariate effects 
 #using relative distribution (nonparametric regression (rhohat))
-elev_rh <- rhohat(pare, elev) #intensity as a function of elevation w/ 95% confidence bands
-ag_vis_rh <- rhohat(pare, ag_vis) #intensity as a function of visibility from agricultural plots with 95% confidence bands
-tot_vis_rh <- rhohat(pare, tot_vis) #intensity as a function of total visibility for the island w/ 95% confidence bands
-slope_rh <- rhohat(pare, slope) #intensity as a function of slope
+elev_rh <- rhohat(pare, elev, confidence = 0) #intensity as a function of elevation 
+ag_vis_rh <- rhohat(pare, ag_vis, confidence = 0) #intensity as a function of visibility from agricultural plots 
+tot_vis_rh <- rhohat(pare, tot_vis, confidence = 0) #intensity as a function of total visibility for the island 
+slope_rh <- rhohat(pare, slope, confidence = 0) #intensity as a function of slope
 
 
 ###################
@@ -71,8 +71,6 @@ slope_rh <- rhohat(pare, slope) #intensity as a function of slope
 # plot(pare, pch=16, col='red', add=T)
 # plot(shore, add=T)
 # par(mfrow=c(1,1))
-
-
 
 ############
 ## Models ##
@@ -103,7 +101,7 @@ summary(ppm3)
 
 # Compute Residual K-function to evaluate model fit in terms of second-order interaction 
 set.seed(1234)
-K_sim <- envelope(ppm3, Kres, nsim=39, fix.n=T)
+K_sim <- envelope(ppm3, Kres, nsim=99, fix.n=T)
 #check fit
 plot(K_sim, lwd=3, legend='F')
 
@@ -122,10 +120,10 @@ ppm8 <- ppm(pare, ~ elev, Strauss(950), correction = 'none')
 ppm9 <- ppm(pare, ~ elev + tot_vis, Strauss(950), correction = 'none')
 ppm10 <- ppm(pare, ~ ag_vis, Strauss(950), correction = 'none')
 ppm11 <- ppm(pare, ~ elev + ag_vis, Strauss(950), correction = 'none')
-ppmS2 <- ppm(pare, ~slope, Strauss(950), correction= 'none') #added models with slope
-ppmSE2 <- ppm(pare, ~slope+elev, Strauss(950), correction= 'none')
-ppmSV2 <- ppm(pare, ~slope+tot_vis, Strauss(950), correction= 'none')
-ppmSEV2 <- ppm(pare, ~slope+elev+tot_vis, Strauss(950), correction= 'none')
+ppmS2 <- ppm(pare, ~ slope, Strauss(950), correction= 'none') #added models with slope
+ppmSE2 <- ppm(pare, ~ slope+elev, Strauss(950), correction= 'none')
+ppmSV2 <- ppm(pare, ~ slope+tot_vis, Strauss(950), correction= 'none')
+ppmSEV2 <- ppm(pare, ~ slope+elev+tot_vis, Strauss(950), correction= 'none')
 
 #compare Gibbs models
 ppm_AICc2 <- model.sel(ppm6, ppm7, ppm8, ppm9, ppm10, ppm11, ppmS2, ppmSE2, ppmSV2, ppmSEV2,rank=AICc)
@@ -170,13 +168,13 @@ dev.off()
 #plot relative distributions
 jpeg(file=here('Figures','temporary','relative_distributions.jpeg'),width = 8, height = 8,units='in',res=300)
 par(mfrow=c(2,2))
-plot(elev_rh, legend=F, xlab=("Elevation ASL"), main="", xlim=c(0,500))
+plot(elev_rh, legend=F, xlab=("Elevation ASL"), main="", xlim=c(0,500), lwd=3)
 mtext(side=3, line=1, at=0, adj=0, cex=0.9, "a)")
-plot(slope_rh, legend=F, xlab=("Slope (rad)"), main="", xlim=c(0,1.2))
+plot(slope_rh, legend=F, xlab=("Slope (rad)"), main="", xlim=c(0,1.2), lwd=3)
 mtext(side=3, line=1, at=0, adj=0, cex=0.9, "b)")
-plot(tot_vis_rh, legend=F, xlab=("Visibility"), main="")
+plot(tot_vis_rh, legend=F, xlab=("Visibility"), main="", lwd=3)
 mtext(side=3, line=1, at=2550, adj=0, cex=0.9, "c)")
-plot(ag_vis_rh, legend=F, xlab=("Ag. Visibility"), main="")
+plot(ag_vis_rh, legend=F, xlab=("Ag. Visibility"), main="", lwd=3)
 mtext(side=3, line=1, at=0, adj=0, cex=0.9, "d)")
 par(mfrow=c(1,1))
 dev.off()
@@ -198,12 +196,4 @@ plot(intensity.ppm(ppm7),
 plot(pare, pch=16, col='red', cex=0.5, add=T)
 mtext(side=3, line=1, at=759002, adj=0, cex=1, "d)")
 par(mfrow=c(1,1))
-dev.off()
-
-#plot predicted first-order intensity of best-fitting model
-jpeg(file=here('Figures','temporary','Fitted_intensity_model7.jpeg'),width = 6, height = 6,units='in',res=300)
-plot(intensity.ppm(ppm7), 
-     col=gray.colors(10, start = 0.3, end = 0.9, gamma = 2.2, rev = T),
-     main="", riblab="Fitted intensity")
-plot(pare, pch=16, col='red', cex=0.5, add=T)
 dev.off()
