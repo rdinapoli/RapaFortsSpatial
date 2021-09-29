@@ -87,13 +87,13 @@ ppm2 <- ppm(pare, ~ag_vis, correction = 'none')
 ppm3 <- ppm(pare, ~tot_vis, correction = 'none')
 ppm4 <- ppm(pare, ~elev+ag_vis, correction = 'none')
 ppm5 <- ppm(pare, ~elev+tot_vis, correction = 'none')
-ppmS <- ppm(pare, ~slope, correction= 'none') #added models with slope
-ppmSE <- ppm(pare, ~slope+elev, correction= 'none')
-ppmSV <- ppm(pare, ~slope+tot_vis, correction= 'none')
-ppmSEV <- ppm(pare, ~slope+elev+tot_vis, correction= 'none')
+ppm6 <- ppm(pare, ~slope, correction= 'none') #added models with slope
+ppm7 <- ppm(pare, ~slope+elev, correction= 'none')
+ppm8 <- ppm(pare, ~slope+tot_vis, correction= 'none')
+ppm9 <- ppm(pare, ~slope+elev+tot_vis, correction= 'none')
 
 # AICc model comparison
-ppm_AICc <- model.sel(ppm0, ppm1, ppm2, ppm3, ppm4, ppm5, ppmS, ppmSE, ppmSV, ppmSEV, rank=AICc)
+ppm_AICc <- model.sel(ppm0, ppm1, ppm2, ppm3, ppm4, ppm5, ppm6, ppm7, ppm8, ppm9, rank=AICc)
 ppm_AICc# Results
  
 #print results of best fitting model
@@ -114,38 +114,38 @@ plot(K_sim, lwd=3, legend='F')
 #Stick with Strauss, hybrid is better for multiple interactions, but this is really just one interaction between forts. 
 
 #Strauss. range of pairwise interaction determined by looking at Kr throguh mean(K_sim$r) = 942  and the mean of nearest neighbor = 971 
-ppm6 <- ppm(pare, ~ 1, Strauss(950), correction = 'none')
-ppm7 <- ppm(pare, ~ tot_vis, Strauss(950), correction = 'none')
-ppm8 <- ppm(pare, ~ elev, Strauss(950), correction = 'none')
-ppm9 <- ppm(pare, ~ elev + tot_vis, Strauss(950), correction = 'none')
-ppm10 <- ppm(pare, ~ ag_vis, Strauss(950), correction = 'none')
-ppm11 <- ppm(pare, ~ elev + ag_vis, Strauss(950), correction = 'none')
-ppmS2 <- ppm(pare, ~ slope, Strauss(950), correction= 'none') #added models with slope
-ppmSE2 <- ppm(pare, ~ slope+elev, Strauss(950), correction= 'none')
-ppmSV2 <- ppm(pare, ~ slope+tot_vis, Strauss(950), correction= 'none')
-ppmSEV2 <- ppm(pare, ~ slope+elev+tot_vis, Strauss(950), correction= 'none')
+ppm10 <- ppm(pare, ~ 1, Strauss(950), correction = 'none')
+ppm11 <- ppm(pare, ~ tot_vis, Strauss(950), correction = 'none')
+ppm12 <- ppm(pare, ~ elev, Strauss(950), correction = 'none')
+ppm13 <- ppm(pare, ~ elev + tot_vis, Strauss(950), correction = 'none')
+ppm14 <- ppm(pare, ~ ag_vis, Strauss(950), correction = 'none')
+ppm15 <- ppm(pare, ~ elev + ag_vis, Strauss(950), correction = 'none')
+ppm16 <- ppm(pare, ~ slope, Strauss(950), correction= 'none') #added models with slope
+ppm17 <- ppm(pare, ~ slope+elev, Strauss(950), correction= 'none')
+ppm18 <- ppm(pare, ~ slope+tot_vis, Strauss(950), correction= 'none')
+ppm19 <- ppm(pare, ~ slope+elev+tot_vis, Strauss(950), correction= 'none')
 
 #compare Gibbs models
-ppm_AICc2 <- model.sel(ppm6, ppm7, ppm8, ppm9, ppm10, ppm11, ppmS2, ppmSE2, ppmSV2, ppmSEV2,rank=AICc)
+ppm_AICc2 <- model.sel(ppm10, ppm11, ppm12, ppm13, ppm14, ppm15, ppm16, ppm17, ppm18, ppm19,rank=AICc)
 ppm_AICc2
 
 #print results of best fitting model
-summary(ppm7)
+summary(ppm11)
 
 #check residual K
 set.seed(1234)
-K_sim2 <- envelope(ppm7, Kres, nsim=99, fix.n=T)
+K_sim2 <- envelope(ppm11, Kres, nsim=99, fix.n=T)
 #check fit
 plot(K_sim2, lwd=3, legend='F')
 
 #plot predicted first-order intensity of best-fitting model
-plot(intensity.ppm(ppm7), 
+plot(intensity.ppm(ppm11), 
      col=gray.colors(10, start = 0.3, end = 0.9, gamma = 2.2, rev = T),
      main="", riblab="Fitted intensity")
 plot(pare, pch=16, col='red', cex=0.25, add=T)
 
 #partial residual plot for elevation
-par_res <- parres(ppm7, "tot_vis")
+par_res <- parres(ppm11, "tot_vis")
 #check fit
 plot(par_res)
 
@@ -190,7 +190,7 @@ mtext(side=3, line=1, at=0, adj=0, cex=1, "b)")
 plot(par_res, legend=F, main='', xlab="Visibility")
 mtext(side=3, line=1, at=0, adj=0, cex=1, "c)")
 par(mar=c(2.25,2.25,2.25,2.25))
-plot(intensity.ppm(ppm7), 
+plot(intensity.ppm(ppm11), 
      col=gray.colors(10, start = 0.3, end = 0.9, gamma = 2.2, rev = T),
      main="") #riblab="Fitted intensity")
 plot(pare, pch=16, col='red', cex=0.5, add=T)
